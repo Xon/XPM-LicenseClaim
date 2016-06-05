@@ -1,0 +1,7 @@
+<?php
+
+/* For IDE auto-complete */
+class XFCP_XenProductXenMods_ControllerPublic_OptionalExtra extends XenProduct_ControllerPublic_OptionalExtra {}
+class XFCP_XenProductXenMods_ControllerPublic_Product extends XenProduct_ControllerPublic_Product {}
+class XFCP_XenProductXenMods_DataWriter_OptionalExtra extends XenProduct_DataWriter_OptionalExtra {}
+class XFCP_XenProductXenMods_DataWriter_Product extends XenProduct_DataWriter_Product {}
