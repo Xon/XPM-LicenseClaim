@@ -50,16 +50,19 @@ class XenProductXenMods_Install
 					UNIQUE KEY cart_key_item_id_email(cart_key, item_id, email)
 				) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
 			");
+		}
 
+		if (!$version || $version < 1000170)
+		{
 			self::_runQuery("
 				ALTER TABLE xenproduct_product
-				ADD xenmods_product_id INT(10) NOT NULL DEFAULT 0,
-				ADD UNIQUE INDEX xenmods_product_id(xenmods_product_id)
+     			ADD xenmods_product_id INT(10) DEFAULT NULL,
+     			ADD UNIQUE INDEX xenmods_product_id(xenmods_product_id)
 			");
 
 			self::_runQuery("
 				ALTER TABLE xenproduct_optional_extra
-				ADD xenmods_extra_id INT(10) NOT NULL DEFAULT 0,
+				ADD xenmods_extra_id INT(10) DEFAULT NULL,
 				ADD UNIQUE INDEX xenmods_extra_id(xenmods_extra_id)
 			");
 		}
