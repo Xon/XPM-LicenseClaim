@@ -136,7 +136,10 @@ class XenProductXenMods_ControllerPublic_Product extends XFCP_XenProductXenMods_
 				$cartTotals = $cartModel->updateCartTotals($cart['cart_id']);
 				$cart = array_merge($cart, $cartTotals);
 
-				$expiryDate = $item['expiry_date'] + (XenForo_Application::getOptions()->xenproductXenModsExtension * 86400);
+				if ($item['expiry_date'])
+				{
+					$expiryDate = $item['expiry_date'] + (XenForo_Application::getOptions()->xenproductXenModsExtension * 86400);
+				}
 
 				if ($licenses = $cartModel->convertCartToLicenses($cart, $expiryDate, $item['purchase_date']))
 				{
