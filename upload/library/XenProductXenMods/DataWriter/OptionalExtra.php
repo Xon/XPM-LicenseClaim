@@ -6,7 +6,7 @@ class XenProductXenMods_DataWriter_OptionalExtra extends XFCP_XenProductXenMods_
 	{
 		$fields = parent::_getFields();
 
-		$fields['xenproduct_optional_extra']['xenmods_extra_id'] = array('type' => self::TYPE_UINT, 'default' => 0);
+		$fields['xenproduct_optional_extra']['xenmods_extra_id'] = array('type' => self::TYPE_UNKNOWN, 'default' => null);
 
 		return $fields;
 	}
@@ -22,11 +22,24 @@ class XenProductXenMods_DataWriter_OptionalExtra extends XFCP_XenProductXenMods_
 			$session = XenForo_Application::get('session');
 			if ($session->isRegistered('xmExtraId'))
 			{
-				$this->set('xenmods_extra_id', $session->get('xmExtraId'));
+                $xmExtraId = intval($session->get('xmExtraId'));
+                if ($xmExtraId > 0)
+                {
+                    $this->set('xenmods_extra_id', $xmExtraId);
+                }
+                else if ($xmExtraId < 0)
+                {
+                    $this->error('This XenMods extra ID has must be positive.', 'xenmods_extra_id');
+                    return false;
+                }
+                else
+                {
+                    $this->set('xenmods_extra_id', null);
+                }
 				$session->remove('xmExtraId');
 			}
 		}
-		if ($this->isInsert() || $this->get('xenmods_extra_id') != $this->getExisting('xenmods_extra_id'))
+		if ($this->get('xenmods_extra_id') && ($this->isInsert() || $this->get('xenmods_extra_id') != $this->getExisting('xenmods_extra_id')))
 		{
 			$existing = $this->_db->fetchRow('
 				SELECT *

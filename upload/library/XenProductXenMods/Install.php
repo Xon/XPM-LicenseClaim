@@ -66,6 +66,23 @@ class XenProductXenMods_Install
 				ADD UNIQUE INDEX xenmods_extra_id(xenmods_extra_id)
 			");
 		}
+        
+		if (!$version || $version < 1000300)
+		{
+			self::_runQuery("
+				alter table xenproduct_product CHANGE xenmods_product_id xenmods_product_id INT(10) DEFAULT NULL;
+			");
+			self::_runQuery("
+				update xenproduct_product set xenmods_product_id = null where xenmods_product_id = 0;
+			");
+
+			self::_runQuery("
+				alter table xenproduct_optional_extra CHANGE xenmods_extra_id xenmods_extra_id INT(10) DEFAULT NULL;
+			");
+			self::_runQuery("
+				update xenproduct_optional_extra set xenmods_extra_id = null where xenmods_extra_id = 0;
+			");
+		}
 	}
 
 	public static function uninstaller()

@@ -6,7 +6,7 @@ class XenProductXenMods_DataWriter_Product extends XFCP_XenProductXenMods_DataWr
 	{
 		$fields = parent::_getFields();
 
-		$fields['xenproduct_product']['xenmods_product_id'] = array('type' => self::TYPE_UINT, 'default' => 0);
+		$fields['xenproduct_product']['xenmods_product_id'] = array('type' => self::TYPE_UNKNOWN, 'default' => null);
 
 		return $fields;
 	}
@@ -22,11 +22,24 @@ class XenProductXenMods_DataWriter_Product extends XFCP_XenProductXenMods_DataWr
 			$session = XenForo_Application::get('session');
 			if ($session->isRegistered('xmProductId'))
 			{
-				$this->set('xenmods_product_id', $session->get('xmProductId'));
+                $xmProductId = intval($session->get('xmProductId'));
+                if ($xmProductId > 0)
+                {
+                    $this->set('xenmods_product_id', $xmProductId);
+                }
+                else if ($xmProductId < 0)
+                {
+                    $this->error('This XenMods product ID must be positive.', 'xenmods_product_id');
+                    return false;
+                }
+                else
+                {
+                    $this->set('xenmods_product_id', null);
+                }
 				$session->remove('xmProductId');
 			}
 		}
-		if ($this->isInsert() || $this->get('xenmods_product_id') != $this->getExisting('xenmods_product_id'))
+		if ($this->get('xenmods_product_id') && ($this->isInsert() || $this->get('xenmods_product_id') != $this->getExisting('xenmods_product_id')))
 		{
 			$existing = $this->_db->fetchRow('
 				SELECT *
