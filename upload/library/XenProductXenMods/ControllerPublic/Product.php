@@ -24,6 +24,8 @@ class XenProductXenMods_ControllerPublic_Product extends XFCP_XenProductXenMods_
 
 	public function actionClaimXenmodsLicense()
 	{
+		$this->_assertRegistrationRequired();
+
 		$productId = $this->_input->filterSingle('product_id', 'uint');
 		$productHelper = $this->_getProductHelper();
 		list ($product, $version) = $productHelper->assertProductValidAndViewable($productId);
