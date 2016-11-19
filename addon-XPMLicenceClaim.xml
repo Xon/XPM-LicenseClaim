@@ -36,13 +36,13 @@ step=1</edit_format_params>
   <route_prefixes/>
   <style_properties/>
   <templates>
-    <template title="xenproduct_xenmods_claim" version_id="1000070" version_string="1.0.0"><![CDATA[<xen:title>{$product.product_title} - Claim License</xen:title>
+    <template title="xenproduct_licence_claim" version_id="1000000" version_string="1.0.0"><![CDATA[<xen:title>{$product.product_title} - Claim License</xen:title>
 
 <xen:navigation>
 	<xen:breadcrumb href="{xen:link 'full:products', $product}">{$product.product_title}</xen:breadcrumb>
 </xen:navigation>
 
-<form action="{xen:link 'products/claim-xenmods-license', $product}" method="post" class="xenForm formOverlay AutoValidator" data-redirect="on">
+<form action="{xen:link 'products/claim-external-license', $product}" method="post" class="xenForm formOverlay AutoValidator" data-redirect="on">
 
 	<dl class="ctrlUnit">
 		<dt><label for="ctrl_order">Invoice / Order Key:</label></dt>

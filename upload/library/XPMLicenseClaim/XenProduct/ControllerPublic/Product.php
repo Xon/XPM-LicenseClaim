@@ -4,46 +4,38 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
 {
     public function actionSave()
     {
-        $fieldShown = $this->_input->filterSingle('xenmods_product_id_shown', XenForo_Input::BOOLEAN);
-        $xenmodsProductId = $this->_input->filterSingle('xenmods_product_id', XenForo_Input::UINT);
-
-        if (!$fieldShown)
+        $fieldShown = $this->_input->filterSingle('external_product_id_shown', XenForo_Input::BOOLEAN);
+        if ($fieldShown)
         {
-            return parent::actionSave();
-        }
-
-        if (XenForo_Application::isRegistered('session'))
-        {
-            /** @var $session XenForo_Session */
-            $session = XenForo_Application::get('session');
-            $session->set('xmProductId', $xenmodsProductId);
+            XPMLicenseClaim_Globals::$siteId = $this->_input->filterSingle('site_claimable_id', XenForo_Input::UINT);
+            XPMLicenseClaim_Globals::$productId = $this->_input->filterSingle('external_product_id', XenForo_Input::UINT);
         }
 
         return parent::actionSave();
     }
 
-    public function actionClaimXenmodsLicense()
+    public function actionClaimExternalLicense()
     {
         $this->_assertRegistrationRequired();
 
         $productId = $this->_input->filterSingle('product_id', 'uint');
         $productHelper = $this->_getProductHelper();
         list ($product, $version) = $productHelper->assertProductValidAndViewable($productId);
+        $db = XenForo_Application::getDb();
 
         if ($this->isConfirmedPost())
         {
             $cartKey = $this->_input->filterSingle('cart_key', XenForo_Input::STRING);
             $email = $this->_input->filterSingle('email', XenForo_Input::STRING);
 
-            $db = XenForo_Application::getDb();
-
             $products = $db->fetchAll('
                 SELECT *
-                FROM avforums_xenmods
+                FROM xenproduct_external_licence
                 WHERE cart_key = ?
                 AND email = ?
+                AND site_claimable_id = ? 
                 AND product_id = ?
-            ', array($cartKey, $email, $product['xenmods_product_id']));
+            ', array($cartKey, $email, $product['site_claimable_id'], $product['external_product_id']));
 
             if (!$products)
             {
@@ -51,20 +43,22 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
             }
 
             $valid = false;
-            foreach ($products AS $key => $item)
+            foreach ($products AS $key => $externalProduct)
             {
                 $claimed = $db->fetchRow('
                     SELECT *
-                    FROM xenproduct_xenmods_log
-                    WHERE xenmods_product_id = ?
+                    FROM xenproduct_external_licence
+                    WHERE site_claimable_id = ?
+                    AND external_product_id = ?
                     AND cart_key = ?
                     AND item_id = ?
                     AND email = ?
                 ', array(
-                    $item['product_id'],
-                    $item['cart_key'],
-                    $item['item_id'],
-                    $item['email'])
+                    $externalProduct['site_claimable_id'],
+                    $externalProduct['product_id'],
+                    $externalProduct['cart_key'],
+                    $externalProduct['item_id'],
+                    $externalProduct['email'])
                 );
                 if ($claimed)
                 {
@@ -121,8 +115,8 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
                     $extras = $db->fetchAll('
                         SELECT *
                         FROM xenproduct_optional_extra
-                        WHERE xenmods_extra_id IN(' . $db->quote(array_keys($optionalExtras)) . ')
-                    ');
+                        WHERE site_claimable_id = ? and external_extra_id IN(' . $db->quote(array_keys($optionalExtras)) . ')
+                    ', array($product['site_claimable_id']));
                     if ($extras)
                     {
                         $cartItemData['item_optional_extras'] = $this->_getOptionalExtraModel()->getOptionalExtras(array(
@@ -149,10 +143,11 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
 
                 if ($licenses = $cartModel->convertCartToLicenses($cart, $expiryDate, $item['purchase_date']))
                 {
-                    $db->insert('xenproduct_xenmods_log', array(
+                    $db->insert('xenproduct_claim_log', array(
                         'user_id' => $visitor->user_id,
                         'product_id' => $product['product_id'],
-                        'xenmods_product_id' => $item['product_id'],
+                        'site_claimable_id' => $item['site_claimable_id'],
+                        'external_product_id' => $item['product_id'],
                         'cart_key' => $item['cart_key'],
                         'item_id' => $item['item_id'],
                         'email' => $item['email'],
@@ -177,10 +172,24 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
         }
         else
         {
+            $externalSites = $db->fetchAll('
+                SELECT *
+                FROM xenproduct_site_claimable
+                WHERE enabled = 1 and site_claimable_id = ?
+            ', array($product['site_claimable_id']));
+            if (empty($externalSites))
+            {
+                return $this->responseRedirect(
+                    XenForo_ControllerResponse_Redirect::SUCCESS,
+                    XenForo_Link::buildPublicLink('products', $product),
+                    'License are unable to be claimed'
+                );
+            }
+
             $viewParams = array(
-                'product' => $product
+                'product' => $product,
             );
-            return $this->responseView('XPMLicenseClaim_XenProduct_ViewPublic_Product_Claim', 'xenproduct_xenmods_claim', $viewParams);
+            return $this->responseView('XPMLicenseClaim_XenProduct_ViewPublic_Product_Claim', 'xenproduct_licence_claim', $viewParams);
         }
     }
 }

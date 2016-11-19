@@ -6,15 +6,10 @@ class XPMLicenseClaim_XenProduct_Installer
 
     protected static function _canBeInstalled(&$error)
     {
-        if (XenForo_Application::isRegistered('addOns'))
+        if (!SV_Utils_AddOn::addOnIsActive('XenProduct'))
         {
-            $addOns = XenForo_Application::get('addOns');
-            if (empty($addOns['XenProduct']))
-            {
-                $error = 'This add-on requires Xen Product Manager to be installed first.';
-
-                return false;
-            }
+            $error = 'This add-on requires Xen Product Manager to be installed first.';
+            return false;
         }
 
         if (XenForo_Application::$versionId < 1050070)
@@ -33,86 +28,106 @@ class XPMLicenseClaim_XenProduct_Installer
             throw new XenForo_Exception($error, true);
         }
 
-        if (!$version)
-        {
-            self::_runQuery("
-                CREATE TABLE IF NOT EXISTS xenproduct_xenmods_log (
-                    xenmods_log_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-                    user_id INT(10) UNSIGNED NOT NULL,
-                    product_id INT(10) UNSIGNED NOT NULL,
-                    xenmods_product_id INT(10) NOT NULL,
-                    cart_key VARCHAR(250) NOT NULL,
-                    item_id INT(10) NOT NULL,
-                    email VARCHAR(250) NOT NULL,
-                    log_date INT(10) UNSIGNED NOT NULL,
-                    PRIMARY KEY (xenmods_log_id),
-                    UNIQUE KEY cart_key_item_id_email(cart_key, item_id, email)
-                ) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
-            ");
-        }
-
-        if (!$version || $version < 1000170)
-        {
-            self::_runQuery("
-                ALTER TABLE xenproduct_product
-                ADD xenmods_product_id INT(10) DEFAULT NULL,
-                ADD UNIQUE INDEX xenmods_product_id(xenmods_product_id)
-            ");
-
-            self::_runQuery("
-                ALTER TABLE xenproduct_optional_extra
-                ADD xenmods_extra_id INT(10) DEFAULT NULL,
-                ADD UNIQUE INDEX xenmods_extra_id(xenmods_extra_id)
-            ");
-        }
+        $db = XenForo_Application::getDb();
+        $db->query("
+            CREATE TABLE `xenproduct_external_licence` (
+              `external_licence_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+              `site_claimable_id` INT UNSIGNED NOT NULL,
+              `cart_id` int(10) unsigned NOT NULL,
+              `product_id` int(10) unsigned NOT NULL,
+              `item_id` int(10) unsigned NOT NULL,
+              `license_alias` varchar(100) NOT NULL,
+              `license_url` text NOT NULL,
+              `expiry_date` int(10) unsigned NOT NULL,
+              `purchase_date` int(10) unsigned NOT NULL,
+              `license_optional_extras` mediumblob NOT NULL,
+              `cart_key` varchar(50) NOT NULL,
+              `user_id` int(10) unsigned NOT NULL,
+              `username` varchar(50) NOT NULL,
+              `email` varchar(120) NOT NULL,
+              PRIMARY KEY (external_licence_id),
+              KEY cart_key_item_id_email(site_claimable_id, cart_key, item_id, email)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+        ");
         
-        if (!$version || $version < 1000300)
+        $db->query("
+            CREATE TABLE IF NOT EXISTS xenproduct_site_claimable (
+                site_claimable_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                url VARCHAR(250) NOT NULL,
+                enabled tinyint(1) default 1,
+                PRIMARY KEY (site_claimable_id),
+                UNIQUE KEY url(url)
+            ) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
+        ");
+        $db->query("
+            CREATE TABLE IF NOT EXISTS xenproduct_claim_log (
+                site_claimable_id INT UNSIGNED NOT NULL,
+                claim_log_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+                user_id INT(10) UNSIGNED NOT NULL,
+                product_id INT(10) UNSIGNED NOT NULL,
+                external_product_id INT(10) NOT NULL,
+                cart_key VARCHAR(250) NOT NULL,
+                item_id INT(10) NOT NULL,
+                email VARCHAR(250) NOT NULL,
+                log_date INT(10) UNSIGNED NOT NULL,
+                PRIMARY KEY (xenmods_log_id),
+                UNIQUE KEY cart_key_item_id_email(site_claimable_id, cart_key, item_id, email)
+            ) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
+        ");
+        SV_Utils_Install::addColumn('xenproduct_product', 'site_claimable_id', 'INT UNSIGNED DEFAULT NULL');
+        SV_Utils_Install::addColumn('xenproduct_product', 'external_product_id', 'INT(10) DEFAULT NULL');
+        SV_Utils_Install::addIndex('xenproduct_product', 'claimable', array('site_claimable_id', 'external_product_id'));
+
+        SV_Utils_Install::addColumn('xenproduct_optional_extra', 'site_claimable_id', 'INT UNSIGNED DEFAULT NULL');
+        SV_Utils_Install::addColumn('xenproduct_optional_extra', 'external_extra_id', 'INT(10) DEFAULT NULL');
+        SV_Utils_Install::addIndex('xenproduct_optional_extra', 'claimable', array('site_claimable_id', 'external_extra_id'));
+
+        if (SV_Utils_AddOn::addOnIsActive('XenProductXenMods'))
         {
-            self::_runQuery("
-                alter table xenproduct_product CHANGE xenmods_product_id xenmods_product_id INT(10) DEFAULT NULL;
+            // migrate data
+            $db->query("
+                insert ignore into xenproduct_site_claimable (site_claimable_id, url) values (1, 'xenmods.com')
             ");
-            self::_runQuery("
-                update xenproduct_product set xenmods_product_id = null where xenmods_product_id = 0;
+            $db->query("
+                insert ignore into xenproduct_claim_log (site_claimable_id, claim_log_id, user_id, product_id, external_product_id, cart_key, item_id, email, log_date)
+                select 1, xenmods_log_id, user_id, product_id, xenmods_product_id, cart_key, item_id, email, log_date
+                from xenproduct_xenmods_log
             ");
 
-            self::_runQuery("
-                alter table xenproduct_optional_extra CHANGE xenmods_extra_id xenmods_extra_id INT(10) DEFAULT NULL;
+            $db->query("
+                update xenproduct_product
+                set site_claimable_id = 1, external_product_id = xenmods_product_id
+                where xenmods_product_id is not null and external_product_id is null
+
             ");
-            self::_runQuery("
-                update xenproduct_optional_extra set xenmods_extra_id = null where xenmods_extra_id = 0;
+            $db->query("
+                update xenproduct_optional_extra
+                set site_claimable_id = 1, external_extra_id = xenmods_extra_id
+                where xenmods_extra_id is not null and external_extra_id is null
             ");
+
+            $db->query("
+                insert ignore xenproduct_external_licence (site_claimable_id, cart_id, product_id, item_id, license_alias, license_url, expiry_date, purchase_date, license_optional_extras, cart_key, user_id, username, email)
+                select 1, cart_id, product_id, item_id, license_alias, license_url, expiry_date, purchase_date, license_optional_extras, cart_key, user_id, username, email
+                from avforums_xenmods
+            ");            
+
+            SV_Utils_AddOn::removeOldAddOns('XenProductXenMods', true);            
+            // ensure cleanup happens (leave the old licence table around)
+            SV_Utils_Install::dropColumn('xenproduct_product', 'xenmods_product_id');
+            SV_Utils_Install::dropColumn('xenproduct_optional_extra', 'xenmods_extra_id');
         }
     }
 
     public static function uninstall()
     {
-        self::_runQuery("
-            ALTER TABLE xenproduct_product
-            DROP xenmods_product_id
-        ");
-    }
+        $db = XenForo_Application::getDb();
+        $db->query("drop table if exists xenproduct_site_claimable");
+        $db->query("drop table if exists xenproduct_claim_log");
 
-    protected static function _runQuery($sql)
-    {
-        $db = self::_getDb();
-
-        try
-        {
-            $db->query($sql);
-        }
-        catch (Zend_Db_Exception $e) {}
-    }
-
-    /**
-     * @return Zend_Db_Adapter_Abstract
-     */
-    protected static function _getDb()
-    {
-        if (!self::$_db)
-        {
-            self::$_db = XenForo_Application::getDb();
-        }
-
-        return self::$_db;
+        SV_Utils_Install::dropColumn('xenproduct_product', 'site_claimable_id');
+        SV_Utils_Install::dropColumn('xenproduct_product', 'external_product_id');
+        SV_Utils_Install::dropColumn('xenproduct_optional_extra', 'site_claimable_id');
+        SV_Utils_Install::dropColumn('xenproduct_optional_extra', 'external_extra_id');
     }
 }
