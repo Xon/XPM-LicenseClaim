@@ -194,6 +194,31 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
         }
     }
 
+    public function actionDetails()
+    {
+        $response = parent::actionDetails();
+        if ($response instanceof XenForo_ControllerResponse_View && !empty($response->params['product']))
+        {
+
+            $db = XenForo_Application::getDb();
+            $site = $db->fetchRow('
+                SELECT *
+                FROM xenproduct_site_claimable
+                WHERE enabled = 1 and site_claimable_id = ?
+            ', array($response->params['product']['site_claimable_id']));
+
+            if ($site)
+            {
+                $response->params['site'] = $site;
+            }
+            else
+            {
+                $response->params['product']['external_product_id'] = false;
+            }
+        }
+        return $response;
+    }
+
     protected function _getAddEditResponse(array $product = array(), array $version = array())
     {
         $response = parent::_getAddEditResponse($product, $version);
