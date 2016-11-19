@@ -31,7 +31,7 @@ step=1</edit_format_params>
   </permissions>
   <phrases>
     <phrase title="option_XPMLicenseClaim_Extension" version_id="1000070" version_string="1.0.0"><![CDATA[License Extension (days)]]></phrase>
-    <phrase title="option_XPMLicenseClaim_Extension_explain" version_id="1000070" version_string="1.0.0"><![CDATA[If you wish to grant a goodwill license extension when a license is claimed from XenMods, enter the number of days to extend by here.]]></phrase>
+    <phrase title="option_XPMLicenseClaim_Extension_explain" version_id="1000000" version_string="1.0.0"><![CDATA[If you wish to grant a goodwill license extension when a license is claimed from external site, enter the number of days to extend by here.]]></phrase>
   </phrases>
   <route_prefixes/>
   <style_properties/>
@@ -53,7 +53,7 @@ step=1</edit_format_params>
 		<dt><label for="ctrl_email">Email Address:</label></dt>
 		<dd>
 			<input type="email" name="email" value="{$visitor.email}" id="ctrl_email" class="textCtrl" />
-			<p class="explain">Enter the correct email address which you are registered with at XenMods.</p>
+			<p class="explain">Enter the correct email address which you are registered with at {$site.label}.</p>
 		</dd>
 	</dl>
 
@@ -65,53 +65,64 @@ step=1</edit_format_params>
 	<input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
 	<input type="hidden" name="_xfConfirm" value="1" />
 </form>]]></template>
-    <template title="xenproduct_xenmods_optional_extra_edit" version_id="1000070" version_string="1.0.0"><![CDATA[<h2 class="sectionHeader">XenMods Options</h2>
+    <template title="xenproduct_optional_extra_edit_XPMLicenseClaim" version_id="1000070" version_string="1.0.0"><![CDATA[<h2 class="sectionHeader">Licence Claim Options</h2>
 
 <dl class="ctrlUnit">
-	<dt>Allow claims from XenMods:</dt>
+	<dt>Allow claims from an external site:</dt>
 	<dd>
-		<input type="text" class="textCtrl" name="xenmods_extra_id" value="{$optionalExtra.xenmods_extra_id}" />
-		<p class="explain">Enter the optional extra ID here as it appears on the XenMods site.</p>
+        <input type="hidden" name="site_claimable_id" value="{$product.site_claimable_id}" />
+		<input type="text" class="textCtrl" name="external_extra_id" value="{$optionalExtra.external_extra_id}" />
+		<p class="explain">Enter the optional extra ID here.</p>
 	</dd>
 </dl>
 
 <input type="hidden" name="xenmods_extra_id_shown" value="1" />]]></template>
-    <template title="xenproduct_xenmods_product_edit" version_id="1000070" version_string="1.0.0"><![CDATA[<h2 class="sectionHeader">XenMods Options</h2>
+    <template title="xenproduct_product_edit_XPMLicenseClaim" version_id="1000000" version_string="1.0.0"><![CDATA[<h2 class="sectionHeader">Licence Claim Options</h2>
 
 <dl class="ctrlUnit">
-	<dt>Allow claims from XenMods:</dt>
+	<dt>External site:</dt>
 	<dd>
-		<input type="text" class="textCtrl" name="xenmods_product_id" value="{$product.xenmods_product_id}" />
-		<p class="explain">Enter the product ID here as it appears on the XenMods site.</p>
+	        <select name="site_claimable_id">
+	            <option value="0">None</value>
+	            <xen:foreach loop="{$sites}" value="$site">
+	                <option value="{$site.site_claimable_id}" {xen:if '{$site.site_claimable_id} == {$product.site_claimable_id}','selected'}>{$site.label}</value>
+	            </xen:foreach>
+	        </select>
+		<p class="explain">The site to accept claims from.</p>
+	</dd>
+	<dt>External site:</dt>
+	<dd>
+		<input type="text" class="textCtrl" name="external_product_id" value="{$product.external_product_id}" />
+		<p class="explain">Enter the product ID here.</p>
 	</dd>
 </dl>
 
-<input type="hidden" name="xenmods_product_id_shown" value="1" />]]></template>
-    <template title="xenproduct_xenmods_product_view_sidebar" version_id="1000070" version_string="1.0.0"><![CDATA[<xen:if is="{$product.xenmods_product_id}">
-	<a class="callToAction OverlayTrigger" href="{xen:link 'products/claim-xenmods-license', $product}">
+<input type="hidden" name="external_product_id_shown" value="1" />]]></template>
+    <template title="xenproduct_product_view_sidebar_XPMLicenseClaim" version_id="1000000" version_string="1.0.0"><![CDATA[<xen:if is="{$product.external_product_id}">
+	<a class="callToAction OverlayTrigger" href="{xen:link 'products/claim-external-license', $product}">
 	<span>
 		Claim License
 		<small class="minorText">
-			If you already own a license for this product, purchased at XenMods, you can claim it here.
+			If you already own a license for this product, purchased at {$site.label}, you can claim it here.
 		</small>
 	</span>
 	</a>
 </xen:if>]]></template>
   </templates>
   <public_template_modifications>
-    <modification template="xenproduct_optional_extra_edit" modification_key="XPMLicenseClaim_xenproduct_optional_extra_edit" description="Adds the ability to associate a optional extra with a XenMods optional extra ID" execution_order="10" enabled="1" action="str_replace">
+    <modification template="xenproduct_optional_extra_edit" modification_key="XPMLicenseClaim_xenproduct_optional_extra_edit" description="Adds the ability to associate a optional extra with a external site optional extra ID" execution_order="10" enabled="1" action="str_replace">
       <find><![CDATA[<dl class="ctrlUnit submitUnit">]]></find>
-      <replace><![CDATA[<xen:include template="xenproduct_xenmods_optional_extra_edit" />
+      <replace><![CDATA[<xen:include template="xenproduct_optional_extra_edit_XPMLicenseClaim" />
 $0]]></replace>
     </modification>
-    <modification template="xenproduct_product_edit" modification_key="XPMLicenseClaim_xenproduct_product_edit" description="Adds the ability to associate a product with a XenMods product ID" execution_order="10" enabled="1" action="str_replace">
+    <modification template="xenproduct_product_edit" modification_key="XPMLicenseClaim_xenproduct_product_edit" description="Adds the ability to associate a product with a external site product ID" execution_order="10" enabled="1" action="str_replace">
       <find><![CDATA[<dl class="ctrlUnit submitUnit">]]></find>
-      <replace><![CDATA[<xen:include template="xenproduct_xenmods_product_edit" />
+      <replace><![CDATA[<xen:include template="xenproduct_product_edit_XPMLicenseClaim" />
 $0]]></replace>
     </modification>
     <modification template="xenproduct_product_view" modification_key="XPMLicenseClaim_xenproduct_product_view" description="" execution_order="10" enabled="1" action="str_replace">
       <find><![CDATA[<a class="callToAction AddToCart"]]></find>
-      <replace><![CDATA[<xen:include template="xenproduct_xenmods_product_view_sidebar" />
+      <replace><![CDATA[<xen:include template="xenproduct_product_view_sidebar_XPMLicenseClaim" />
 $0]]></replace>
     </modification>
   </public_template_modifications>

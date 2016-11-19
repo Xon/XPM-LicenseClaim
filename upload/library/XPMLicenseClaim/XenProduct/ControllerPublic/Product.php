@@ -33,7 +33,7 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
                 FROM xenproduct_external_licence
                 WHERE cart_key = ?
                 AND email = ?
-                AND site_claimable_id = ? 
+                AND site_claimable_id = ?
                 AND product_id = ?
             ', array($cartKey, $email, $product['site_claimable_id'], $product['external_product_id']));
 
@@ -47,9 +47,9 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
             {
                 $claimed = $db->fetchRow('
                     SELECT *
-                    FROM xenproduct_external_licence
+                    FROM xenproduct_claim_log
                     WHERE site_claimable_id = ?
-                    AND external_product_id = ?
+                    AND product_id = ?
                     AND cart_key = ?
                     AND item_id = ?
                     AND email = ?
@@ -172,12 +172,12 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
         }
         else
         {
-            $externalSites = $db->fetchAll('
+            $site = $db->fetchRow('
                 SELECT *
                 FROM xenproduct_site_claimable
                 WHERE enabled = 1 and site_claimable_id = ?
             ', array($product['site_claimable_id']));
-            if (empty($externalSites))
+            if (empty($site))
             {
                 return $this->responseRedirect(
                     XenForo_ControllerResponse_Redirect::SUCCESS,
@@ -188,8 +188,26 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
 
             $viewParams = array(
                 'product' => $product,
+                'site' => $site,
             );
             return $this->responseView('XPMLicenseClaim_XenProduct_ViewPublic_Product_Claim', 'xenproduct_licence_claim', $viewParams);
         }
+    }
+
+    protected function _getAddEditResponse(array $product = array(), array $version = array())
+    {
+        $response = parent::_getAddEditResponse($product, $version);
+        if ($response instanceof XenForo_ControllerResponse_View && !empty($response->params['product']))
+        {
+            $db = XenForo_Application::getDb();
+            $sites = $db->fetchAll('
+                SELECT *
+                FROM xenproduct_site_claimable
+                WHERE enabled = 1 or site_claimable_id = ?
+            ', array($response->params['product']['site_claimable_id']));
+
+            $response->params['sites'] = empty($sites) ? array() : $sites;
+        }
+        return $response;
     }
 }
