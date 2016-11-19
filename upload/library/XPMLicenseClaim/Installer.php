@@ -82,7 +82,8 @@ class XPMLicenseClaim_Installer
         SV_Utils_Install::addColumn('xenproduct_optional_extra', 'external_extra_id', 'INT(10) DEFAULT NULL');
         SV_Utils_Install::addIndex('xenproduct_optional_extra', 'claimable', array('site_claimable_id', 'external_extra_id'));
 
-        if (SV_Utils_AddOn::addOnIsActive('XenProductXenMods'))
+        if (SV_Utils_AddOn::addOnIsActive('XenProductXenMods') && 
+            $db->fetchRow("SHOW COLUMNS FROM `xenproduct_product` WHERE Field = 'xenmods_product_id'"))
         {
             // migrate data
             $db->query("
