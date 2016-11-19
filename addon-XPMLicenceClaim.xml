@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon addon_id="XenProductXenMods" title="Xen Product Manager - XenMods License Claim" version_string="1.0.4" version_id="1000400" url="https://xenresources.com" install_callback_class="XenProductXenMods_Install" install_callback_method="installer" uninstall_callback_class="XenProductXenMods_Install" uninstall_callback_method="uninstaller">
+<addon addon_id="XPMLicenseClaim" title="Xen Product Manager - License Claim" version_string="1.0.0" version_id="1000000" url="https://xenresources.com" install_callback_class="XPMLicenseClaim_Installer" install_callback_method="install" uninstall_callback_class="XPMLicenseClaim_Installer" uninstall_callback_method="uninstall">
   <admin_navigation/>
   <admin_permissions/>
   <admin_style_properties/>
@@ -7,16 +7,16 @@
   <admin_template_modifications/>
   <code_events/>
   <code_event_listeners>
-    <listener event_id="load_class_controller" execute_order="10" callback_class="XenProductXenMods_Listener" callback_method="extendProductController" active="1" hint="XenProduct_ControllerPublic_Product" description="Extends: XenProduct_ControllerPublic_Product"/>
-    <listener event_id="load_class_controller" execute_order="10" callback_class="XenProductXenMods_Listener" callback_method="extendOptionalExtraController" active="1" hint="XenProduct_ControllerPublic_OptionalExtra" description="Extends: XenProduct_ControllerPublic_OptionalExtra"/>
-    <listener event_id="load_class_datawriter" execute_order="10" callback_class="XenProductXenMods_Listener" callback_method="extendProductDataWriter" active="1" hint="XenProduct_DataWriter_Product" description="Extends: XenProduct_DataWriter_Product"/>
-    <listener event_id="load_class_datawriter" execute_order="10" callback_class="XenProductXenMods_Listener" callback_method="extendOptionalExtraDataWriter" active="1" hint="XenProduct_DataWriter_OptionalExtra" description="Extends: XenProduct_DataWriter_OptionalExtra"/>
+    <listener event_id="load_class_controller" execute_order="10" callback_class="XPMLicenseClaim_Listener" callback_method="load_class" active="1" hint="XenProduct_ControllerPublic_Product" description="Extends: XenProduct_ControllerPublic_Product"/>
+    <listener event_id="load_class_controller" execute_order="10" callback_class="XPMLicenseClaim_Listener" callback_method="load_class" active="1" hint="XenProduct_ControllerPublic_OptionalExtra" description="Extends: XenProduct_ControllerPublic_OptionalExtra"/>
+    <listener event_id="load_class_datawriter" execute_order="10" callback_class="XPMLicenseClaim_Listener" callback_method="load_class" active="1" hint="XenProduct_DataWriter_Product" description="Extends: XenProduct_DataWriter_Product"/>
+    <listener event_id="load_class_datawriter" execute_order="10" callback_class="XPMLicenseClaim_Listener" callback_method="load_class" active="1" hint="XenProduct_DataWriter_OptionalExtra" description="Extends: XenProduct_DataWriter_OptionalExtra"/>
   </code_event_listeners>
   <cron/>
   <email_templates/>
   <email_template_modifications/>
   <optiongroups>
-    <option option_id="xenproductXenModsExtension" edit_format="spinbox" data_type="unsigned_integer" can_backup="1">
+    <option option_id="XPMLicenseClaim_Extension" edit_format="spinbox" data_type="unsigned_integer" can_backup="1">
       <default_value>0</default_value>
       <edit_format_params>min=0
 step=1</edit_format_params>
@@ -30,8 +30,8 @@ step=1</edit_format_params>
     <interface_groups/>
   </permissions>
   <phrases>
-    <phrase title="option_xenproductXenModsExtension" version_id="1000070" version_string="1.0.0"><![CDATA[License Extension (days)]]></phrase>
-    <phrase title="option_xenproductXenModsExtension_explain" version_id="1000070" version_string="1.0.0"><![CDATA[If you wish to grant a goodwill license extension when a license is claimed from XenMods, enter the number of days to extend by here.]]></phrase>
+    <phrase title="option_XPMLicenseClaim_Extension" version_id="1000070" version_string="1.0.0"><![CDATA[License Extension (days)]]></phrase>
+    <phrase title="option_XPMLicenseClaim_Extension_explain" version_id="1000070" version_string="1.0.0"><![CDATA[If you wish to grant a goodwill license extension when a license is claimed from XenMods, enter the number of days to extend by here.]]></phrase>
   </phrases>
   <route_prefixes/>
   <style_properties/>
@@ -99,17 +99,17 @@ step=1</edit_format_params>
 </xen:if>]]></template>
   </templates>
   <public_template_modifications>
-    <modification template="xenproduct_optional_extra_edit" modification_key="XenProductXenMods_xenproduct_optional_extra_edit" description="Adds the ability to associate a optional extra with a XenMods optional extra ID" execution_order="10" enabled="1" action="str_replace">
+    <modification template="xenproduct_optional_extra_edit" modification_key="XPMLicenseClaim_xenproduct_optional_extra_edit" description="Adds the ability to associate a optional extra with a XenMods optional extra ID" execution_order="10" enabled="1" action="str_replace">
       <find><![CDATA[<dl class="ctrlUnit submitUnit">]]></find>
       <replace><![CDATA[<xen:include template="xenproduct_xenmods_optional_extra_edit" />
 $0]]></replace>
     </modification>
-    <modification template="xenproduct_product_edit" modification_key="XenProductXenMods_xenproduct_product_edit" description="Adds the ability to associate a product with a XenMods product ID" execution_order="10" enabled="1" action="str_replace">
+    <modification template="xenproduct_product_edit" modification_key="XPMLicenseClaim_xenproduct_product_edit" description="Adds the ability to associate a product with a XenMods product ID" execution_order="10" enabled="1" action="str_replace">
       <find><![CDATA[<dl class="ctrlUnit submitUnit">]]></find>
       <replace><![CDATA[<xen:include template="xenproduct_xenmods_product_edit" />
 $0]]></replace>
     </modification>
-    <modification template="xenproduct_product_view" modification_key="XenProductXenMods_xenproduct_product_view" description="" execution_order="10" enabled="1" action="str_replace">
+    <modification template="xenproduct_product_view" modification_key="XPMLicenseClaim_xenproduct_product_view" description="" execution_order="10" enabled="1" action="str_replace">
       <find><![CDATA[<a class="callToAction AddToCart"]]></find>
       <replace><![CDATA[<xen:include template="xenproduct_xenmods_product_view_sidebar" />
 $0]]></replace>

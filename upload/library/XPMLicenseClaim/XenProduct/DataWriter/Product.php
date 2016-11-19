@@ -1,6 +1,6 @@
 <?php
 
-class XenProductXenMods_DataWriter_Product extends XFCP_XenProductXenMods_DataWriter_Product
+class XPMLicenseClaim_XenProduct_DataWriter_Product extends XFCP_XPMLicenseClaim_XenProduct_DataWriter_Product
 {
 	protected function _getFields()
 	{

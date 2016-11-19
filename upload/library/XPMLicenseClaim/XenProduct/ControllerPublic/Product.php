@@ -1,6 +1,6 @@
 <?php
 
-class XenProductXenMods_ControllerPublic_Product extends XFCP_XenProductXenMods_ControllerPublic_Product
+class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicenseClaim_XenProduct_ControllerPublic_Product
 {
 	public function actionSave()
 	{
@@ -140,7 +140,7 @@ class XenProductXenMods_ControllerPublic_Product extends XFCP_XenProductXenMods_
 
 				if ($item['expiry_date'])
 				{
-					$expiryDate = $item['expiry_date'] + (XenForo_Application::getOptions()->xenproductXenModsExtension * 86400);
+					$expiryDate = $item['expiry_date'] + (XenForo_Application::getOptions()->XPMLicenseClaim_XenProductExtension * 86400);
 				}
                 else
 				{
@@ -180,7 +180,7 @@ class XenProductXenMods_ControllerPublic_Product extends XFCP_XenProductXenMods_
 			$viewParams = array(
 				'product' => $product
 			);
-			return $this->responseView('XenProductXenMods_ViewPublic_Product_Claim', 'xenproduct_xenmods_claim', $viewParams);
+			return $this->responseView('XPMLicenseClaim_XenProduct_ViewPublic_Product_Claim', 'xenproduct_xenmods_claim', $viewParams);
 		}
 	}
 }

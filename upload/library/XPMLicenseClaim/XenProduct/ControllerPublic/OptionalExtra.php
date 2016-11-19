@@ -1,6 +1,6 @@
 <?php
 
-class XenProductXenMods_ControllerPublic_OptionalExtra extends XFCP_XenProductXenMods_ControllerPublic_OptionalExtra
+class XPMLicenseClaim_XenProduct_ControllerPublic_OptionalExtra extends XFCP_XPMLicenseClaim_XenProduct_ControllerPublic_OptionalExtra
 {
 	public function actionSave()
 	{

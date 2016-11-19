@@ -1,6 +1,6 @@
 <?php
 
-class XenProductXenMods_Install
+class XPMLicenseClaim_XenProduct_Installer
 {
 	protected static $_db = null;
 
@@ -25,14 +25,13 @@ class XenProductXenMods_Install
 		return true;
 	}
 
-	public static function installer($previous)
+	public static function install($existingAddOn, array $addOnData, SimpleXMLElement $xml)
 	{
+        $version = isset($existingAddOn['version_id']) ? $existingAddOn['version_id'] : 0;
 		if (!self::_canBeInstalled($error))
 		{
 			throw new XenForo_Exception($error, true);
 		}
-
-		$version = is_array($previous) ? $previous['version_id'] : 0;
 
 		if (!$version)
 		{
@@ -85,7 +84,7 @@ class XenProductXenMods_Install
 		}
 	}
 
-	public static function uninstaller()
+	public static function uninstall()
 	{
 		self::_runQuery("
 			ALTER TABLE xenproduct_product
