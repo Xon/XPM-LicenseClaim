@@ -1,6 +1,6 @@
 <?php
 
-class XPMLicenseClaim_XenProduct_Installer
+class XPMLicenseClaim_Installer
 {
     protected static $_db = null;
 
@@ -30,7 +30,7 @@ class XPMLicenseClaim_XenProduct_Installer
 
         $db = XenForo_Application::getDb();
         $db->query("
-            CREATE TABLE `xenproduct_external_licence` (
+            CREATE TABLE IF NOT EXISTS `xenproduct_external_licence` (
               `external_licence_id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
               `site_claimable_id` INT UNSIGNED NOT NULL,
               `cart_id` int(10) unsigned NOT NULL,
@@ -49,14 +49,14 @@ class XPMLicenseClaim_XenProduct_Installer
               KEY cart_key_item_id_email(site_claimable_id, cart_key, item_id, email)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8
         ");
-        
+
         $db->query("
             CREATE TABLE IF NOT EXISTS xenproduct_site_claimable (
                 site_claimable_id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-                url VARCHAR(250) NOT NULL,
+                label VARCHAR(250) NOT NULL,
                 enabled tinyint(1) default 1,
                 PRIMARY KEY (site_claimable_id),
-                UNIQUE KEY url(url)
+                UNIQUE KEY label(label)
             ) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
         ");
         $db->query("
@@ -70,7 +70,7 @@ class XPMLicenseClaim_XenProduct_Installer
                 item_id INT(10) NOT NULL,
                 email VARCHAR(250) NOT NULL,
                 log_date INT(10) UNSIGNED NOT NULL,
-                PRIMARY KEY (xenmods_log_id),
+                PRIMARY KEY (claim_log_id),
                 UNIQUE KEY cart_key_item_id_email(site_claimable_id, cart_key, item_id, email)
             ) ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci
         ");
@@ -86,7 +86,7 @@ class XPMLicenseClaim_XenProduct_Installer
         {
             // migrate data
             $db->query("
-                insert ignore into xenproduct_site_claimable (site_claimable_id, url) values (1, 'xenmods.com')
+                insert ignore into xenproduct_site_claimable (site_claimable_id, label) values (1, 'XenMods')
             ");
             $db->query("
                 insert ignore into xenproduct_claim_log (site_claimable_id, claim_log_id, user_id, product_id, external_product_id, cart_key, item_id, email, log_date)
@@ -110,9 +110,9 @@ class XPMLicenseClaim_XenProduct_Installer
                 insert ignore xenproduct_external_licence (site_claimable_id, cart_id, product_id, item_id, license_alias, license_url, expiry_date, purchase_date, license_optional_extras, cart_key, user_id, username, email)
                 select 1, cart_id, product_id, item_id, license_alias, license_url, expiry_date, purchase_date, license_optional_extras, cart_key, user_id, username, email
                 from avforums_xenmods
-            ");            
+            ");
 
-            SV_Utils_AddOn::removeOldAddOns('XenProductXenMods', true);            
+            SV_Utils_AddOn::removeOldAddOns(array('XenProductXenMods'), true);
             // ensure cleanup happens (leave the old licence table around)
             SV_Utils_Install::dropColumn('xenproduct_product', 'xenmods_product_id');
             SV_Utils_Install::dropColumn('xenproduct_optional_extra', 'xenmods_extra_id');
