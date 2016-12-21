@@ -8,7 +8,7 @@ Some assembly required.
 - Export the contents of the following query, replacing (...) with the list of product ids that are being exported.
  - xenproduct_external_licence2 is a staging table name and SHOULD NOT be xenproduct_external_licence
 ```
- create table as xenproduct_external_licence2
+ create table xenproduct_external_licence2 as
  SELECT item.cart_id, item.product_id, item.item_id, license.license_alias, license.license_url, license.expiry_date, license.purchase_date, license.license_optional_extras, cart.cart_key, user.user_id, user.username, user.email
  FROM xenproduct_cart_item AS item
  INNER JOIN xenproduct_license AS license ON
