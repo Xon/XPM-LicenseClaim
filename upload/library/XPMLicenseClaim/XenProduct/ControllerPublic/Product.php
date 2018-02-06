@@ -197,7 +197,7 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
     public function actionDetails()
     {
         $response = parent::actionDetails();
-        if ($response instanceof XenForo_ControllerResponse_View && 
+        if ($response instanceof XenForo_ControllerResponse_View &&
             !empty($response->params['product']) &&
             !empty($response->params['product']['site_claimable_id']))
         {
@@ -224,16 +224,17 @@ class XPMLicenseClaim_XenProduct_ControllerPublic_Product extends XFCP_XPMLicens
     protected function _getAddEditResponse(array $product = array(), array $version = array())
     {
         $response = parent::_getAddEditResponse($product, $version);
-        if ($response instanceof XenForo_ControllerResponse_View && 
-            !empty($response->params['product']) &&
-            !empty($response->params['product']['site_claimable_id']))
+        if ($response instanceof XenForo_ControllerResponse_View &&
+            !empty($response->params['product']))
         {
+            $siteClaimId = empty($response->params['product']['site_claimable_id']) ? 0 : $response->params['product']['site_claimable_id'];
+
             $db = XenForo_Application::getDb();
             $sites = $db->fetchAll('
                 SELECT *
                 FROM xenproduct_site_claimable
                 WHERE enabled = 1 or site_claimable_id = ?
-            ', array($response->params['product']['site_claimable_id']));
+            ', array($siteClaimId));
 
             $response->params['sites'] = empty($sites) ? array() : $sites;
         }
